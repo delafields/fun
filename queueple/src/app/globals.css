@@ -1,0 +1,97 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-indigo-50: #EEF2FF;
+  --color-indigo-100: #E0E7FF;
+  --color-indigo-500: #6366F1;
+  --color-indigo-600: #4F46E5;
+  --color-indigo-700: #4338CA;
+
+  --color-amber-50: #FFFBEB;
+  --color-amber-100: #FEF3C7;
+  --color-amber-400: #FBBF24;
+  --color-amber-500: #F59E0B;
+  --color-amber-600: #D97706;
+
+  --color-rose-50: #FFF1F2;
+  --color-rose-100: #FFE4E6;
+  --color-rose-500: #E8636A;
+  --color-rose-600: #DC2626;
+
+  --color-cream: #FAFAF8;
+  --color-slate-50: #F8FAFC;
+  --color-slate-100: #F1F5F9;
+  --color-slate-200: #E2E8F0;
+  --color-slate-300: #CBD5E1;
+  --color-slate-400: #94A3B8;
+  --color-slate-500: #64748B;
+  --color-slate-700: #334155;
+  --color-slate-900: #1E293B;
+
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-outfit);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-sans), system-ui, sans-serif;
+  background: #FAFAF8;
+  color: #1E293B;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+/* Turn indicator glow */
+.your-turn-glow {
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25), 0 0 32px rgba(245, 158, 11, 0.1);
+}
+
+/* Bottom sheet backdrop */
+.sheet-backdrop {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+}
+
+/* Safe area padding for PWA */
+.safe-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+
+.safe-top {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep scrolling */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Code input digit boxes */
+.digit-box {
+  width: 3rem;
+  height: 3.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  border-radius: 0.75rem;
+  border: 2px solid #E2E8F0;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.digit-box:focus {
+  border-color: #6366F1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  outline: none;
+}
