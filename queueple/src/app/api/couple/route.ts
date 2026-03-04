@@ -48,8 +48,8 @@ export async function POST(req: Request) {
     })),
   };
 
-  // Store with 90-day TTL
-  await redis.set(`couple:${code}`, JSON.stringify(data), { ex: 60 * 60 * 24 * 90 });
+  // Store with 1-year TTL (refreshed on access)
+  await redis.set(`couple:${code}`, JSON.stringify(data), { ex: 60 * 60 * 24 * 365 });
 
   return Response.json({ code });
 }
@@ -69,7 +69,7 @@ export async function GET(req: Request) {
   }
 
   // Refresh TTL on access
-  await redis.expire(`couple:${code}`, 60 * 60 * 24 * 90);
+  await redis.expire(`couple:${code}`, 60 * 60 * 24 * 365);
 
   const data: CoupleData = typeof raw === "string" ? JSON.parse(raw) : raw;
   return Response.json(data);
