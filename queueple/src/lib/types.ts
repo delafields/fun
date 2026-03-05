@@ -39,6 +39,7 @@ export interface Category {
 
 export interface CoupleData {
   code: string;
+  pin: string;
   version: number;
   createdAt: string;
   members: {

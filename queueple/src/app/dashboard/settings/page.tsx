@@ -1,15 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCouple } from "@/context/CoupleContext";
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { data, me, partner, clearSession } = useCouple();
+  const { data, me, partner, session, clearSession } = useCouple();
   const [copied, setCopied] = useState(false);
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [pinRevealed, setPinRevealed] = useState(false);
+  const [pinFetched, setPinFetched] = useState(false);
+  const [pin, setPin] = useState<string | null>(null);
+  const [pinLoading, setPinLoading] = useState(false);
+  const [showSetPin, setShowSetPin] = useState(false);
+  const [newPinDigits, setNewPinDigits] = useState(["", "", "", ""]);
+  const [pinSaving, setPinSaving] = useState(false);
+  const pinInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   if (!data || !me) return null;
 
@@ -20,6 +28,73 @@ export default function SettingsPage() {
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Fallback
+    }
+  }
+
+  async function handleRevealPin() {
+    if (pinRevealed) {
+      setPinRevealed(false);
+      return;
+    }
+    if (pinFetched) {
+      setPinRevealed(true);
+      return;
+    }
+    setPinLoading(true);
+    try {
+      const res = await fetch(`/api/couple/pin?code=${session!.coupleCode}`);
+      if (res.ok) {
+        const { pin: fetchedPin } = await res.json();
+        setPin(fetchedPin);
+        setPinFetched(true);
+        if (fetchedPin) {
+          setPinRevealed(true);
+        } else {
+          setShowSetPin(true);
+        }
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setPinLoading(false);
+    }
+  }
+
+  function handleNewPinChange(index: number, value: string) {
+    if (value.length > 1) value = value.slice(-1);
+    if (value && !/^\d$/.test(value)) return;
+    const updated = [...newPinDigits];
+    updated[index] = value;
+    setNewPinDigits(updated);
+    if (value && index < 3) pinInputRefs.current[index + 1]?.focus();
+  }
+
+  function handleNewPinKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace" && !newPinDigits[index] && index > 0) {
+      pinInputRefs.current[index - 1]?.focus();
+    }
+  }
+
+  async function handleSavePin() {
+    const newPin = newPinDigits.join("");
+    if (newPin.length !== 4) return;
+    setPinSaving(true);
+    try {
+      const res = await fetch("/api/couple/pin", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: session!.coupleCode, pin: newPin }),
+      });
+      if (res.ok) {
+        setPin(newPin);
+        setPinFetched(true);
+        setShowSetPin(false);
+        setPinRevealed(true);
+      }
+    } catch {
+      // Silently fail
+    } finally {
+      setPinSaving(false);
     }
   }
 
@@ -87,6 +162,61 @@ export default function SettingsPage() {
           <p className="text-xs text-slate-400 mt-1">
             Share this to reconnect on a new device
           </p>
+        </div>
+
+        {/* Couple PIN */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500 mb-2">
+            Couple PIN
+          </h3>
+          {showSetPin ? (
+            <>
+              <p className="text-sm text-slate-600 mb-3">
+                Set a 4-digit PIN to reconnect on new devices
+              </p>
+              <div className="flex gap-2 justify-center mb-4">
+                {newPinDigits.map((digit, i) => (
+                  <input
+                    key={i}
+                    ref={(el) => { pinInputRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleNewPinChange(i, e.target.value)}
+                    onKeyDown={(e) => handleNewPinKeyDown(i, e)}
+                    className="digit-box"
+                  />
+                ))}
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={handleSavePin}
+                disabled={pinSaving || newPinDigits.join("").length !== 4}
+                className="w-full py-3 bg-indigo-500 text-white font-semibold rounded-2xl disabled:opacity-50 transition-colors"
+              >
+                {pinSaving ? "Saving..." : "Save PIN"}
+              </motion.button>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-2xl font-bold text-slate-900 tracking-widest font-mono">
+                  {pinRevealed && pin ? pin : "****"}
+                </span>
+                <button
+                  onClick={handleRevealPin}
+                  disabled={pinLoading}
+                  className="text-sm text-indigo-500 font-medium"
+                >
+                  {pinLoading ? "..." : pinRevealed ? "Hide" : "Reveal"}
+                </button>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">
+                Needed to sign back in on a new device
+              </p>
+            </>
+          )}
         </div>
 
         {/* Stats */}

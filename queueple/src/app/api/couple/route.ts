@@ -6,10 +6,14 @@ import { CoupleData } from "@/lib/types";
 
 // POST: Create a new couple
 export async function POST(req: Request) {
-  const { name, emoji } = await req.json();
+  const { name, emoji, pin } = await req.json();
 
   if (!name?.trim() || !emoji) {
     return Response.json({ error: "Name and emoji are required" }, { status: 400 });
+  }
+
+  if (!pin || !/^\d{4}$/.test(pin)) {
+    return Response.json({ error: "A 4-digit PIN is required" }, { status: 400 });
   }
 
   // Generate unique 6-digit code
@@ -25,6 +29,7 @@ export async function POST(req: Request) {
 
   const data: CoupleData = {
     code,
+    pin,
     version: 1,
     createdAt: new Date().toISOString(),
     members: {
@@ -72,5 +77,7 @@ export async function GET(req: Request) {
   await redis.expire(`couple:${code}`, 60 * 60 * 24 * 365);
 
   const data: CoupleData = typeof raw === "string" ? JSON.parse(raw) : raw;
-  return Response.json(data);
+  // Never expose PIN in the general GET response
+  const { pin: _pin, ...safeData } = data;
+  return Response.json(safeData);
 }

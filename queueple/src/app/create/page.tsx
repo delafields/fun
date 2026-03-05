@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { EmojiPicker } from "@/components/EmojiPicker";
@@ -10,13 +10,36 @@ export default function CreatePage() {
   const router = useRouter();
   const { saveSession } = useSession();
   const [name, setName] = useState("");
+  const [pin, setPin] = useState(["", "", "", ""]);
   const [emoji, setEmoji] = useState("😊");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  function handlePinChange(index: number, value: string) {
+    if (value.length > 1) value = value.slice(-1);
+    if (value && !/^\d$/.test(value)) return;
+    const newPin = [...pin];
+    newPin[index] = value;
+    setPin(newPin);
+    if (value && index < 3) pinRefs.current[index + 1]?.focus();
+  }
+
+  function handlePinKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace" && !pin[index] && index > 0) {
+      pinRefs.current[index - 1]?.focus();
+    }
+  }
 
   async function handleCreate() {
     if (!name.trim()) {
       setError("What should we call you?");
+      return;
+    }
+
+    const pinCode = pin.join("");
+    if (pinCode.length !== 4) {
+      setError("Set a 4-digit PIN for your couple");
       return;
     }
 
@@ -27,7 +50,7 @@ export default function CreatePage() {
       const res = await fetch("/api/couple", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), emoji }),
+        body: JSON.stringify({ name: name.trim(), emoji, pin: pinCode }),
       });
 
       if (!res.ok) throw new Error("Failed to create");
@@ -79,6 +102,28 @@ export default function CreatePage() {
             className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:border-indigo-500 focus:ring-0 outline-none text-slate-900 transition-colors mb-6"
             onKeyDown={(e) => e.key === "Enter" && handleCreate()}
           />
+
+          <label className="block text-sm font-medium text-slate-700 mb-2">
+            Set a couple PIN
+          </label>
+          <p className="text-slate-400 text-xs mb-3">
+            Used to reconnect on a new device
+          </p>
+          <div className="flex gap-2 justify-center mb-6">
+            {pin.map((digit, i) => (
+              <input
+                key={i}
+                ref={(el) => { pinRefs.current[i] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handlePinChange(i, e.target.value)}
+                onKeyDown={(e) => handlePinKeyDown(i, e)}
+                className="digit-box"
+              />
+            ))}
+          </div>
 
           <label className="block text-sm font-medium text-slate-700 mb-3">
             Pick your avatar
