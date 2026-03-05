@@ -245,6 +245,14 @@ export default function JoinPage() {
               >
                 {loading ? "Checking..." : "Next"}
               </motion.button>
+
+              <button
+                onClick={handleVerifyCode}
+                disabled={loading || code.length !== 6}
+                className="w-full mt-4 text-sm text-slate-400 hover:text-indigo-500 transition-colors disabled:opacity-40"
+              >
+                Reconnecting on a new device?
+              </button>
             </>
           )}
 
