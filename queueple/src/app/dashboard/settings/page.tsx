@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCouple } from "@/context/CoupleContext";
@@ -18,6 +18,11 @@ export default function SettingsPage() {
   const [newPinDigits, setNewPinDigits] = useState(["", "", "", ""]);
   const [pinSaving, setPinSaving] = useState(false);
   const pinInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent));
+  }, []);
 
   if (!data || !me) return null;
 
@@ -249,6 +254,27 @@ export default function SettingsPage() {
                 )}
               </p>
               <p className="text-xs text-slate-400">Days together</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Add to Home Screen */}
+        <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+          <h3 className="text-sm font-medium text-slate-500 mb-2">
+            Install as App
+          </h3>
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-semibold text-slate-800">iPhone / iPad</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                In Safari, tap the share button <span className="font-semibold">⎋</span> at the bottom, then tap <span className="font-semibold">&quot;Add to Home Screen&quot;</span>.
+              </p>
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-slate-800">Android</p>
+              <p className="text-xs text-slate-500 mt-0.5">
+                In Chrome, tap the menu <span className="font-semibold">⋮</span> at the top right, then tap <span className="font-semibold">&quot;Add to Home Screen&quot;</span> or <span className="font-semibold">&quot;Install app&quot;</span>.
+              </p>
             </div>
           </div>
         </div>

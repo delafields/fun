@@ -1,11 +1,30 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useCouple } from "@/context/CoupleContext";
 import { cn } from "@/lib/utils";
 import { CATEGORY_ICON_OPTIONS } from "@/lib/constants";
+
+function useIsStandalone() {
+  const [isStandalone, setIsStandalone] = useState(true); // default true to avoid flash
+  useEffect(() => {
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    setIsStandalone(standalone);
+  }, []);
+  return isStandalone;
+}
+
+function useIsIOS() {
+  const [isIOS, setIsIOS] = useState(false);
+  useEffect(() => {
+    setIsIOS(/iPad|iPhone|iPod/.test(navigator.userAgent));
+  }, []);
+  return isIOS;
+}
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -14,6 +33,20 @@ export default function DashboardPage() {
   const [newCatName, setNewCatName] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("🎯");
   const [addingCategory, setAddingCategory] = useState(false);
+  const isStandalone = useIsStandalone();
+  const isIOS = useIsIOS();
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
+
+  useEffect(() => {
+    if (!isStandalone && !localStorage.getItem("queueple_install_dismissed")) {
+      setShowInstallBanner(true);
+    }
+  }, [isStandalone]);
+
+  function dismissInstallBanner() {
+    localStorage.setItem("queueple_install_dismissed", "1");
+    setShowInstallBanner(false);
+  }
 
   if (!data || !me) return null;
 
@@ -74,6 +107,33 @@ export default function DashboardPage() {
           </p>
         </motion.div>
       )}
+
+      {/* Install as app banner */}
+      <AnimatePresence>
+        {showInstallBanner && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, height: 0 }}
+            className="mb-4 p-4 bg-indigo-50 rounded-2xl border border-indigo-200 relative"
+          >
+            <button
+              onClick={dismissInstallBanner}
+              className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 text-lg leading-none"
+            >
+              &times;
+            </button>
+            <p className="text-sm font-semibold text-slate-800 mb-1">
+              Add to Home Screen
+            </p>
+            <p className="text-xs text-slate-500 pr-4">
+              {isIOS
+                ? "Tap the share button ⎋ in Safari, then \"Add to Home Screen\" for the best experience."
+                : "Tap the menu ⋮ in your browser, then \"Add to Home Screen\" or \"Install app\"."}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Greeting */}
       <p className="text-slate-500 mb-4 text-sm">
