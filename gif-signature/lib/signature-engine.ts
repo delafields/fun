@@ -1,4 +1,11 @@
 import opentype from "opentype.js";
+import {
+  type SignatureExtras,
+  hasExtras,
+  calculateExtrasHeight,
+  calculateHeadshotOffset,
+  renderExtras,
+} from "./extras";
 
 export type LoopMode = "loop" | "once" | "fade";
 
@@ -14,6 +21,7 @@ export interface SignatureConfig {
   width: number;
   height: number;
   loopMode?: LoopMode; // "loop" = repeat forever, "once" = write + hold, "fade" = write + fade out + repeat
+  extras?: SignatureExtras;
 }
 
 interface PathSegment {
@@ -220,7 +228,7 @@ function drawPartialPath(
 export async function renderFrame(
   canvas: HTMLCanvasElement,
   config: SignatureConfig,
-  progress: number // 0 to 1
+  progress: number // 0 to 1+ (>1 = extras fade-in zone)
 ): Promise<void> {
   const ctx = canvas.getContext("2d")!;
   const { width, height } = config;
@@ -240,9 +248,15 @@ export async function renderFrame(
 
   const font = await loadFont(config.fontFile);
 
+  // Calculate signature area (excluding extras zone)
+  const extrasH = calculateExtrasHeight(config.extras);
+  const sigHeight = height - extrasH;
+  const headshotOffset = calculateHeadshotOffset(config.extras, sigHeight);
+
   // Auto-scale font size to fit canvas with padding
-  const maxTextWidth = width * 0.9;
-  const maxTextHeight = height * 0.7;
+  const textAreaWidth = width - headshotOffset;
+  const maxTextWidth = textAreaWidth * 0.9;
+  const maxTextHeight = sigHeight * 0.7;
   let fontSize = config.fontSize;
 
   // Measure at the preset font size first
@@ -267,8 +281,9 @@ export async function renderFrame(
   const subtitleHeight = config.subtitle ? 24 : 0;
   const totalContentHeight = textHeight + subtitleHeight;
 
-  const offsetX = (width - textWidth) / 2 - bb.x1;
-  const offsetY = (height - totalContentHeight) / 2 - bb.y1;
+  const offsetX =
+    headshotOffset + (textAreaWidth - textWidth) / 2 - bb.x1;
+  const offsetY = (sigHeight - totalContentHeight) / 2 - bb.y1;
 
   // Get centered path
   const centeredPath = font.getPath(
@@ -281,7 +296,8 @@ export async function renderFrame(
 
   // Calculate total path length
   const totalLength = getPathLength(commands);
-  const drawLength = totalLength * Math.min(progress, 1);
+  const drawProgress = Math.min(progress, 1);
+  const drawLength = totalLength * drawProgress;
 
   // Scale stroke width proportionally if font was scaled down
   const fontScale = fontSize / config.fontSize;
@@ -296,7 +312,7 @@ export async function renderFrame(
 
   // Once fully written, overlay the solid filled letters so they
   // don't look hollow. Quick crossfade at the very end.
-  if (progress >= 1) {
+  if (drawProgress >= 1) {
     centeredPath.fill = config.color;
     centeredPath.stroke = null;
     centeredPath.draw(ctx);
@@ -312,10 +328,23 @@ export async function renderFrame(
     ctx.textAlign = "center";
     ctx.fillText(
       config.subtitle,
-      width / 2,
+      headshotOffset + textAreaWidth / 2,
       offsetY + textHeight + bb.y1 + 28
     );
     ctx.globalAlpha = 1;
+  }
+
+  // Render extras (headshot, socials, CTA, QR) — fades in from progress 0.85 to 1.1
+  if (hasExtras(config.extras) && progress >= 0.85) {
+    const extrasAlpha = Math.min((progress - 0.85) / 0.25, 1);
+    await renderExtras(
+      ctx,
+      config.extras!,
+      width,
+      sigHeight,
+      config.color,
+      extrasAlpha
+    );
   }
 }
 
@@ -328,8 +357,10 @@ export async function generateFrames(
   const loopMode = config.loopMode || "once";
   const holdFrames = 15;
   const fadeFrames = 12;
+  const withExtras = hasExtras(config.extras);
+  const extrasFadeFrames = withExtras ? 10 : 0;
 
-  // Write-on animation
+  // Write-on animation (progress 0 → 1)
   for (let i = 0; i <= totalFrames; i++) {
     const progress = i / totalFrames;
     const eased =
@@ -340,6 +371,16 @@ export async function generateFrames(
     await renderFrame(canvas, config, eased);
     const ctx = canvas.getContext("2d")!;
     frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  }
+
+  // Extras fade-in frames (progress 1.0 → 1.2)
+  if (withExtras) {
+    for (let i = 1; i <= extrasFadeFrames; i++) {
+      const extrasProgress = 1 + (i / extrasFadeFrames) * 0.25;
+      await renderFrame(canvas, config, extrasProgress);
+      const ctx = canvas.getContext("2d")!;
+      frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
   }
 
   // Hold the final frame
@@ -353,24 +394,20 @@ export async function generateFrames(
   if (loopMode === "fade") {
     for (let i = 1; i <= fadeFrames; i++) {
       const alpha = 1 - i / fadeFrames;
-      // Clear canvas
       if (config.bgColor) {
         ctx.fillStyle = config.bgColor;
         ctx.fillRect(0, 0, config.width, config.height);
       } else {
         ctx.clearRect(0, 0, config.width, config.height);
       }
-      // Draw last frame with reduced alpha
       ctx.globalAlpha = alpha;
       ctx.putImageData(lastFrame, 0, 0);
-      // Overlay with bg to simulate fade
       ctx.globalAlpha = 1 - alpha;
       ctx.fillStyle = config.bgColor || "rgba(255,255,255,1)";
       ctx.fillRect(0, 0, config.width, config.height);
       ctx.globalAlpha = 1;
       frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
     }
-    // Add a brief pause at empty
     if (config.bgColor) {
       ctx.fillStyle = config.bgColor;
       ctx.fillRect(0, 0, config.width, config.height);

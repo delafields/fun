@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 import { renderFrame, type SignatureConfig } from "@/lib/signature-engine";
+import { hasExtras } from "@/lib/extras";
 
 interface SignaturePreviewProps {
   config: SignatureConfig;
@@ -13,41 +14,47 @@ export default function SignaturePreview({
   className = "",
 }: SignaturePreviewProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
-  const startTimeRef = useRef<number>(0);
-
-  const animate = useCallback(
-    (timestamp: number) => {
-      if (!canvasRef.current) return;
-      if (!startTimeRef.current) startTimeRef.current = timestamp;
-
-      const elapsed = timestamp - startTimeRef.current;
-      // Duration based on speed setting (frames * 50ms frame delay)
-      const drawDuration = config.speed * 50;
-      const holdDuration = 1500; // hold finished sig for 1.5s
-      const totalDuration = drawDuration + holdDuration;
-
-      const cycleTime = elapsed % totalDuration;
-      const progress = Math.min(cycleTime / drawDuration, 1);
-
-      // Ease-in-out
-      const eased =
-        progress < 0.5
-          ? 2 * progress * progress
-          : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-      renderFrame(canvasRef.current, config, eased);
-
-      animRef.current = requestAnimationFrame(animate);
-    },
-    [config]
-  );
+  const cancelledRef = useRef(false);
 
   useEffect(() => {
-    startTimeRef.current = 0;
-    animRef.current = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animRef.current);
-  }, [animate]);
+    cancelledRef.current = false;
+    const startTime = performance.now();
+
+    const drawDuration = config.speed * 50;
+    const extrasDuration = hasExtras(config.extras) ? 500 : 0;
+    const holdDuration = 1500;
+    const totalDuration = drawDuration + extrasDuration + holdDuration;
+
+    async function loop() {
+      while (!cancelledRef.current && canvasRef.current) {
+        const elapsed = performance.now() - startTime;
+        const cycleTime = elapsed % totalDuration;
+
+        let progress: number;
+        if (cycleTime <= drawDuration) {
+          const t = cycleTime / drawDuration;
+          progress =
+            t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+        } else if (cycleTime <= drawDuration + extrasDuration) {
+          const t = (cycleTime - drawDuration) / extrasDuration;
+          progress = 1 + t * 0.25;
+        } else {
+          progress = 1.25;
+        }
+
+        await renderFrame(canvasRef.current, config, progress);
+
+        // Yield to the browser (roughly 60fps)
+        await new Promise((r) => requestAnimationFrame(r));
+      }
+    }
+
+    loop();
+
+    return () => {
+      cancelledRef.current = true;
+    };
+  }, [config]);
 
   return (
     <canvas

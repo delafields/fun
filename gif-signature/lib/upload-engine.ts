@@ -4,6 +4,12 @@
  */
 
 import type { LoopMode } from "./signature-engine";
+import {
+  type SignatureExtras,
+  hasExtras,
+  calculateExtrasHeight,
+  renderExtras,
+} from "./extras";
 
 export interface UploadConfig {
   imageData: string; // base64 data URL
@@ -12,21 +18,26 @@ export interface UploadConfig {
   width: number;
   height: number;
   loopMode?: LoopMode;
+  extras?: SignatureExtras;
 }
 
 /**
  * Renders a single frame of the upload animation.
  * Uses a left-to-right wipe reveal with soft edge to simulate writing.
  */
-export function renderUploadFrame(
+export async function renderUploadFrame(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
   config: UploadConfig,
-  progress: number // 0 to 1
-): void {
+  progress: number // 0 to 1+ (>1 = extras fade-in zone)
+): Promise<void> {
   const ctx = canvas.getContext("2d")!;
   canvas.width = config.width;
   canvas.height = config.height;
+
+  // Calculate signature area (excluding extras zone)
+  const extrasH = calculateExtrasHeight(config.extras);
+  const sigHeight = config.height - extrasH;
 
   // Clear
   if (config.bgColor) {
@@ -36,26 +47,25 @@ export function renderUploadFrame(
     ctx.clearRect(0, 0, config.width, config.height);
   }
 
-  if (progress <= 0) return;
+  const drawProgress = Math.min(progress, 1);
+  if (drawProgress <= 0) return;
 
-  // Draw the image scaled to fit
+  // Draw the image scaled to fit within signature area
   const scale = Math.min(
     (config.width * 0.9) / img.naturalWidth,
-    (config.height * 0.8) / img.naturalHeight
+    (sigHeight * 0.8) / img.naturalHeight
   );
   const drawW = img.naturalWidth * scale;
   const drawH = img.naturalHeight * scale;
   const drawX = (config.width - drawW) / 2;
-  const drawY = (config.height - drawH) / 2;
+  const drawY = (sigHeight - drawH) / 2;
 
   // Create a clipping mask for the left-to-right reveal
-  // The reveal position + soft feather edge
-  const revealX = drawX + drawW * Math.min(progress * 1.1, 1);
-  const featherWidth = drawW * 0.08; // soft edge width
+  const revealX = drawX + drawW * Math.min(drawProgress * 1.1, 1);
+  const featherWidth = drawW * 0.08;
 
   ctx.save();
 
-  // Create gradient mask for soft reveal edge
   const gradient = ctx.createLinearGradient(
     revealX - featherWidth,
     0,
@@ -65,46 +75,54 @@ export function renderUploadFrame(
   gradient.addColorStop(0, "rgba(0,0,0,1)");
   gradient.addColorStop(1, "rgba(0,0,0,0)");
 
-  // Draw image with hard clip up to the feather zone
   ctx.beginPath();
   ctx.rect(0, 0, revealX - featherWidth, config.height);
   ctx.clip();
   ctx.drawImage(img, drawX, drawY, drawW, drawH);
   ctx.restore();
 
-  // Draw the feathered edge
-  if (progress < 1) {
+  if (drawProgress < 1) {
     ctx.save();
     ctx.beginPath();
     ctx.rect(revealX - featherWidth, 0, featherWidth, config.height);
     ctx.clip();
-
-    // Draw image
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
-
-    // Apply fade with gradient
     ctx.globalCompositeOperation = "destination-in";
     ctx.fillStyle = gradient;
     ctx.fillRect(revealX - featherWidth, 0, featherWidth, config.height);
-
     ctx.restore();
   } else {
-    // Fully revealed
     ctx.drawImage(img, drawX, drawY, drawW, drawH);
+  }
+
+  // Render extras — fades in from progress 0.85 to 1.1
+  if (hasExtras(config.extras) && progress >= 0.85) {
+    const extrasAlpha = Math.min((progress - 0.85) / 0.25, 1);
+    await renderExtras(
+      ctx,
+      config.extras!,
+      config.width,
+      sigHeight,
+      "#1a1a1a",
+      extrasAlpha
+    );
   }
 }
 
-export function generateUploadFrames(
+export async function generateUploadFrames(
   canvas: HTMLCanvasElement,
   img: HTMLImageElement,
   config: UploadConfig
-): ImageData[] {
+): Promise<ImageData[]> {
   const frames: ImageData[] = [];
   const totalFrames = config.speed;
   const loopMode = config.loopMode || "once";
   const holdFrames = 15;
   const fadeFrames = 12;
+  const withExtras = hasExtras(config.extras);
+  const extrasFadeFrames = withExtras ? 10 : 0;
 
+  // Write-on animation (progress 0 → 1)
   for (let i = 0; i <= totalFrames; i++) {
     const progress = i / totalFrames;
     const eased =
@@ -112,9 +130,19 @@ export function generateUploadFrames(
         ? 2 * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
-    renderUploadFrame(canvas, img, config, eased);
+    await renderUploadFrame(canvas, img, config, eased);
     const ctx = canvas.getContext("2d")!;
     frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+  }
+
+  // Extras fade-in frames (progress 1.0 → 1.25)
+  if (withExtras) {
+    for (let i = 1; i <= extrasFadeFrames; i++) {
+      const extrasProgress = 1 + (i / extrasFadeFrames) * 0.25;
+      await renderUploadFrame(canvas, img, config, extrasProgress);
+      const ctx = canvas.getContext("2d")!;
+      frames.push(ctx.getImageData(0, 0, canvas.width, canvas.height));
+    }
   }
 
   const ctx = canvas.getContext("2d")!;

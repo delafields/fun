@@ -28,6 +28,12 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Merge extras back into config
+    const extras = JSON.parse(session.metadata?.signature_extras || "null");
+    if (extras) {
+      config.extras = extras;
+    }
+
     return NextResponse.json({ config });
   } catch (error) {
     console.error("Session verification error:", error);
@@ -66,14 +72,21 @@ export async function POST(req: NextRequest) {
     // Stripe metadata values must be under 500 chars.
     // For upload mode, the base64 image is too large for metadata,
     // so we store a flag and pass image via URL param on success page.
+    // Extras (headshot base64 excluded) are stored in a separate metadata key.
     let metadata: Record<string, string>;
+    const extras = config.extras;
+    const configWithoutExtras = { ...config };
+    delete configWithoutExtras.extras;
+
     if (mode === "upload") {
-      // Store config without the imageData (too large for Stripe metadata)
-      const { imageData, ...rest } = config;
+      const { imageData, ...rest } = configWithoutExtras;
       metadata = { signature_config: JSON.stringify(rest) };
-      // We'll pass imageData back via localStorage on the client
     } else {
-      metadata = { signature_config: JSON.stringify(config) };
+      metadata = { signature_config: JSON.stringify(configWithoutExtras) };
+    }
+
+    if (extras && Object.keys(extras).length > 0) {
+      metadata.signature_extras = JSON.stringify(extras);
     }
 
     const session = await stripe.checkout.sessions.create({

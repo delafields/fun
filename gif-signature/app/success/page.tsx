@@ -71,6 +71,12 @@ function SuccessContent() {
     try {
       let blob: Blob;
 
+      // Restore headshot from localStorage if it was saved during checkout
+      const savedHeadshot = localStorage.getItem("gif-sig-headshot");
+      if (savedHeadshot && rawConfig.extras) {
+        (rawConfig.extras as Record<string, unknown>).headshot = savedHeadshot;
+      }
+
       if (mode === "upload") {
         // Retrieve image from localStorage
         const imageData = localStorage.getItem("gif-sig-upload-image");
@@ -92,9 +98,10 @@ function SuccessContent() {
           bgColor: (rawConfig.bgColor as string | null) ?? null,
           width: (rawConfig.width as number) || 500,
           height: (rawConfig.height as number) || 150,
+          extras: rawConfig.extras as UploadConfig["extras"],
         };
 
-        const frames = generateUploadFrames(
+        const frames = await generateUploadFrames(
           canvasRef.current,
           img,
           uploadConfig
@@ -122,6 +129,9 @@ function SuccessContent() {
         const frames = await generateFrames(canvasRef.current, typeConfig);
         blob = await encodeGif(frames, typeConfig.width, typeConfig.height, 50, typeConfig.loopMode || "once");
       }
+
+      // Clean up headshot from localStorage
+      localStorage.removeItem("gif-sig-headshot");
 
       setGifBlob(blob);
       setGifUrl(URL.createObjectURL(blob));

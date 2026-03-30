@@ -5,9 +5,12 @@ import SignaturePreview from "@/components/signature-preview";
 import UploadPreview from "@/components/upload-preview";
 import StylePicker from "@/components/style-picker";
 import FineTunePanel from "@/components/fine-tune-panel";
+import ExtrasPanel from "@/components/extras-panel";
 import { PRESETS, type SignaturePreset } from "@/lib/presets";
 import type { SignatureConfig, LoopMode } from "@/lib/signature-engine";
 import type { UploadConfig } from "@/lib/upload-engine";
+import type { SignatureExtras } from "@/lib/extras";
+import { calculateExtrasHeight, hasExtras } from "@/lib/extras";
 import EmailPreviewMock from "@/components/email-preview-mock";
 import Link from "next/link";
 
@@ -31,6 +34,9 @@ export default function CreatePage() {
   const [bgColor, setBgColor] = useState<string | null>(null);
   const [size, setSize] = useState<"small" | "medium" | "large">("medium");
   const [loopMode, setLoopMode] = useState<LoopMode>("once");
+
+  // Extras state (shared between type and upload modes)
+  const [extras, setExtras] = useState<SignatureExtras>({});
 
   // Upload mode state
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
@@ -61,31 +67,45 @@ export default function CreatePage() {
     setSpeed(p.speed);
   };
 
+  const activeExtras = hasExtras(extras) ? extras : undefined;
+
   const config: SignatureConfig = useMemo(
-    () => ({
-      name,
-      subtitle: subtitle || undefined,
-      fontFile: preset.fontFile,
-      color,
-      strokeWidth: preset.strokeWidth,
-      speed,
-      fontSize: preset.fontSize,
-      bgColor,
-      loopMode,
-      ...SIZE_MAP[size],
-    }),
-    [name, subtitle, preset, color, speed, bgColor, size, loopMode]
+    () => {
+      const base = SIZE_MAP[size];
+      const extrasH = calculateExtrasHeight(activeExtras);
+      return {
+        name,
+        subtitle: subtitle || undefined,
+        fontFile: preset.fontFile,
+        color,
+        strokeWidth: preset.strokeWidth,
+        speed,
+        fontSize: preset.fontSize,
+        bgColor,
+        loopMode,
+        width: base.width,
+        height: base.height + extrasH,
+        extras: activeExtras,
+      };
+    },
+    [name, subtitle, preset, color, speed, bgColor, size, loopMode, activeExtras]
   );
 
   const uploadConfig: UploadConfig = useMemo(
-    () => ({
-      imageData: uploadedImage || "",
-      speed: uploadSpeed,
-      bgColor: uploadBg,
-      loopMode: uploadLoopMode,
-      ...SIZE_MAP[uploadSize],
-    }),
-    [uploadedImage, uploadSpeed, uploadBg, uploadSize, uploadLoopMode]
+    () => {
+      const base = SIZE_MAP[uploadSize];
+      const extrasH = calculateExtrasHeight(activeExtras);
+      return {
+        imageData: uploadedImage || "",
+        speed: uploadSpeed,
+        bgColor: uploadBg,
+        loopMode: uploadLoopMode,
+        width: base.width,
+        height: base.height + extrasH,
+        extras: activeExtras,
+      };
+    },
+    [uploadedImage, uploadSpeed, uploadBg, uploadSize, uploadLoopMode, activeExtras]
   );
 
   const handleFileUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -179,14 +199,29 @@ export default function CreatePage() {
     try {
       let checkoutConfig: Record<string, unknown>;
 
+      // Store headshot in localStorage if present (too large for Stripe metadata)
+      if (extras.headshot) {
+        localStorage.setItem("gif-sig-headshot", extras.headshot);
+      }
+
       if (mode === "type") {
         if (!name.trim()) return;
         checkoutConfig = { mode: "type", ...config };
+        // Strip headshot base64 from config (stored in localStorage)
+        if (checkoutConfig.extras) {
+          const { headshot, ...restExtras } = checkoutConfig.extras as SignatureExtras;
+          checkoutConfig.extras = restExtras;
+        }
       } else if (mode === "upload") {
         if (!uploadedImage) return;
         // Store image in localStorage (too large for Stripe metadata)
         localStorage.setItem("gif-sig-upload-image", uploadedImage);
         checkoutConfig = { mode: "upload", ...uploadConfig };
+        // Strip headshot base64
+        if (checkoutConfig.extras) {
+          const { headshot, ...restExtras } = checkoutConfig.extras as SignatureExtras;
+          checkoutConfig.extras = restExtras;
+        }
       } else {
         if (!aiVideoUrl) return;
         checkoutConfig = { mode: "ai", videoUrl: aiVideoUrl, prompt: aiPrompt };
@@ -320,20 +355,26 @@ export default function CreatePage() {
                     (optional)
                   </span>
                 </label>
-                <FineTunePanel
-                  color={color}
-                  onColorChange={setColor}
-                  subtitle={subtitle}
-                  onSubtitleChange={setSubtitle}
-                  speed={speed}
-                  onSpeedChange={setSpeed}
-                  bgColor={bgColor}
-                  onBgColorChange={setBgColor}
-                  size={size}
-                  onSizeChange={setSize}
-                  loopMode={loopMode}
-                  onLoopModeChange={setLoopMode}
-                />
+                <div className="space-y-3">
+                  <FineTunePanel
+                    color={color}
+                    onColorChange={setColor}
+                    subtitle={subtitle}
+                    onSubtitleChange={setSubtitle}
+                    speed={speed}
+                    onSpeedChange={setSpeed}
+                    bgColor={bgColor}
+                    onBgColorChange={setBgColor}
+                    size={size}
+                    onSizeChange={setSize}
+                    loopMode={loopMode}
+                    onLoopModeChange={setLoopMode}
+                  />
+                  <ExtrasPanel
+                    extras={extras}
+                    onExtrasChange={setExtras}
+                  />
+                </div>
               </section>
             </>
           )}
@@ -434,6 +475,7 @@ export default function CreatePage() {
                     (optional)
                   </span>
                 </label>
+                <div className="space-y-3">
                 <div className="border border-gray-200 rounded-xl p-5 space-y-5 max-w-md">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -515,6 +557,11 @@ export default function CreatePage() {
                       ))}
                     </div>
                   </div>
+                </div>
+                <ExtrasPanel
+                  extras={extras}
+                  onExtrasChange={setExtras}
+                />
                 </div>
               </section>
             </>
