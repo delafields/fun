@@ -888,7 +888,7 @@ export default function CreatePage() {
                 <button
                   onClick={handleAiGenerate}
                   disabled={!aiName.trim() || aiGenerating}
-                  className="px-6 py-3 bg-[#1F5CF7] text-white font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
+                  className="px-6 py-3 bg-[#1F5CF7] text-white font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-[#1F5CF7]/30 disabled:shadow-none disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {aiGenerating ? (
                     <span className="flex items-center gap-2">
@@ -955,7 +955,7 @@ export default function CreatePage() {
                 <button
                   onClick={handleAiAnimate}
                   disabled={aiAnimating}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-[#1F5CF7]/30 disabled:shadow-none disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {aiAnimating ? (
                     <span className="flex items-center gap-2">
@@ -975,7 +975,7 @@ export default function CreatePage() {
                 <button
                   onClick={handleCheckout}
                   disabled={!canCheckout || loading}
-                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-[#1F5CF7]/30 disabled:shadow-none disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {loading ? "Redirecting..." : "Get My Signature \u2014 $7"}
                 </button>
