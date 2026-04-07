@@ -8,16 +8,29 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <svg
-              className="w-7 h-7 text-[#1F5CF7]"
+              className="w-7 h-7"
+              viewBox="0 0 28 28"
               fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
             >
+              {/* Swoosh stroke */}
               <path
+                d="M3 21c3-2 7-6 11-6s5 3 8 1.5c1.5-.75 2.5-2 3-3.5"
+                stroke="#1F5CF7"
+                strokeWidth={2.5}
                 strokeLinecap="round"
+                fill="none"
+              />
+              {/* Pen nib */}
+              <path
+                d="M22 3l3 3-2 2-3-3 2-2z"
+                fill="#1F5CF7"
+              />
+              <path
+                d="M20 5l3 3-9 9-4 1 1-4 9-9z"
+                stroke="#1F5CF7"
+                strokeWidth={1.5}
                 strokeLinejoin="round"
-                d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
+                fill="none"
               />
             </svg>
             <span className="text-lg font-bold tracking-tight text-[#1C1917]">
@@ -45,18 +58,18 @@ export default function Home() {
             >
               <path d="M10.868 2.884c-.321-.772-1.415-.772-1.736 0l-1.83 4.401-4.753.381c-.833.067-1.171 1.107-.536 1.651l3.62 3.102-1.106 4.637c-.194.813.691 1.456 1.405 1.02L10 15.591l4.069 2.485c.713.436 1.598-.207 1.404-1.02l-1.106-4.637 3.62-3.102c.635-.544.297-1.584-.536-1.65l-4.752-.382-1.831-4.401z" />
             </svg>
-            Trusted by professionals everywhere
+            The last thing they read matters
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-[-0.04em] text-[#1C1917] mb-6 leading-[1.05]">
-            Your name, animated.
+            Sign off with
             <br />
-            <span className="text-[#A8A29E]">In every email.</span>
+            <span className="text-[#A8A29E]">personality.</span>
           </h1>
 
           <p className="text-lg md:text-xl text-[#79716B] max-w-2xl mx-auto mb-10 leading-relaxed">
-            Create a beautiful animated signature GIF in 30 seconds. Type your
-            name, pick a style, and stand out in every inbox.
+            Turn your name into an animated signature that actually feels like
+            you. Pick a style, make it yours, and let every email leave an impression.
           </p>
 
           <Link
@@ -396,16 +409,27 @@ export default function Home() {
             <div className="md:col-span-2">
               <div className="flex items-center gap-2 mb-3">
                 <svg
-                  className="w-6 h-6 text-[#1F5CF7]"
+                  className="w-6 h-6"
+                  viewBox="0 0 28 28"
                   fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
                 >
                   <path
+                    d="M3 21c3-2 7-6 11-6s5 3 8 1.5c1.5-.75 2.5-2 3-3.5"
+                    stroke="#1F5CF7"
+                    strokeWidth={2.5}
                     strokeLinecap="round"
+                    fill="none"
+                  />
+                  <path
+                    d="M22 3l3 3-2 2-3-3 2-2z"
+                    fill="#1F5CF7"
+                  />
+                  <path
+                    d="M20 5l3 3-9 9-4 1 1-4 9-9z"
+                    stroke="#1F5CF7"
+                    strokeWidth={1.5}
                     strokeLinejoin="round"
-                    d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
+                    fill="none"
                   />
                 </svg>
                 <span className="text-lg font-bold tracking-tight text-[#1C1917]">

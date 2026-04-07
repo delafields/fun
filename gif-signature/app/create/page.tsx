@@ -285,16 +285,27 @@ export default function CreatePage() {
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <svg
-              className="w-7 h-7 text-[#1F5CF7]"
+              className="w-7 h-7"
+              viewBox="0 0 28 28"
               fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
             >
               <path
+                d="M3 21c3-2 7-6 11-6s5 3 8 1.5c1.5-.75 2.5-2 3-3.5"
+                stroke="#1F5CF7"
+                strokeWidth={2.5}
                 strokeLinecap="round"
+                fill="none"
+              />
+              <path
+                d="M22 3l3 3-2 2-3-3 2-2z"
+                fill="#1F5CF7"
+              />
+              <path
+                d="M20 5l3 3-9 9-4 1 1-4 9-9z"
+                stroke="#1F5CF7"
+                strokeWidth={1.5}
                 strokeLinejoin="round"
-                d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
+                fill="none"
               />
             </svg>
             <span className="text-lg font-bold tracking-tight text-[#1C1917]">
