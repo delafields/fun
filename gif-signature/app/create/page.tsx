@@ -12,6 +12,8 @@ import type { UploadConfig } from "@/lib/upload-engine";
 import type { SignatureExtras } from "@/lib/extras";
 import { calculateExtrasHeight, hasExtras } from "@/lib/extras";
 import EmailPreviewMock from "@/components/email-preview-mock";
+import AiInspirationGallery from "@/components/ai-inspiration-gallery";
+import type { AiPreset } from "@/lib/ai-presets";
 import Link from "next/link";
 
 const SIZE_MAP = {
@@ -57,6 +59,9 @@ export default function CreatePage() {
   const [aiAnimating, setAiAnimating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
   const aiFileInputRef = useRef<HTMLInputElement>(null);
+  const [aiFlow, setAiFlow] = useState<"examples" | "scratch">("examples");
+  const [aiSelectedPresetId, setAiSelectedPresetId] = useState<string | null>(null);
+  const [aiImproving, setAiImproving] = useState(false);
 
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -189,6 +194,37 @@ export default function CreatePage() {
       setAiError("Failed to animate. Please try again.");
     } finally {
       setAiAnimating(false);
+    }
+  };
+
+  const handleImprovePrompt = async () => {
+    if (!aiPrompt.trim() || aiImproving) return;
+    setAiImproving(true);
+    try {
+      const res = await fetch("/api/improve-prompt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: aiPrompt }),
+      });
+      const data = await res.json();
+      if (data.improved) {
+        setAiPrompt(data.improved);
+      } else if (data.error) {
+        setAiError(data.error);
+      }
+    } catch {
+      setAiError("Failed to enhance prompt.");
+    } finally {
+      setAiImproving(false);
+    }
+  };
+
+  const handleExampleSelect = (preset: AiPreset) => {
+    setAiSelectedPresetId(preset.id);
+    setAiPrompt(preset.prompt);
+    // If the preset has a reference image, load it
+    if (preset.referenceImage) {
+      setAiRefImage(preset.referenceImage);
     }
   };
 
@@ -607,6 +643,7 @@ export default function CreatePage() {
           {/* ============ AI MODE ============ */}
           {mode === "ai" && (
             <>
+              {/* Step 1: Name */}
               <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
                 <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
                   Step 1
@@ -623,78 +660,230 @@ export default function CreatePage() {
                 />
               </section>
 
-              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
-                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
-                  Step 2
-                </label>
-                <label className="block text-lg font-bold text-[#1C1917] mb-2">
-                  Describe the style
-                </label>
-                <p className="text-sm text-[#79716B] mb-4">
-                  Be creative — describe the font, effects, colors, animations.
-                  Your name will be automatically included.
-                </p>
-                <textarea
-                  value={aiPrompt}
-                  onChange={(e) => setAiPrompt(e.target.value)}
-                  placeholder={`e.g. "Playful bubble font with a star that traces around the letters" or "Bold graffiti style with spray paint effect, letter by letter reveal"`}
-                  rows={3}
-                  className="w-full max-w-lg px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition resize-none bg-white"
-                />
-              </section>
-
-              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
-                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
-                  Step 3
-                </label>
-                <label className="block text-lg font-bold text-[#1C1917] mb-2">
-                  Reference image{" "}
-                  <span className="text-[#A8A29E] font-normal text-base">
-                    (optional)
-                  </span>
-                </label>
-                <p className="text-sm text-[#79716B] mb-4">
-                  Upload a style reference — a font you like, a logo, an example of
-                  the look you want.
-                </p>
-
-                <input
-                  ref={aiFileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleAiRefUpload}
-                  className="hidden"
-                />
-
-                {!aiRefImage ? (
+              {/* Flow toggle */}
+              <div className="flex gap-1 bg-white rounded-2xl p-1.5 max-w-xs shadow-sm border border-gray-100">
+                {([
+                  { id: "examples" as const, label: "Start from example" },
+                  { id: "scratch" as const, label: "From scratch" },
+                ]).map((flow) => (
                   <button
-                    onClick={() => aiFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl px-6 py-4 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer"
+                    key={flow.id}
+                    onClick={() => setAiFlow(flow.id)}
+                    className={`flex-1 px-4 py-2 rounded-xl text-sm font-medium transition cursor-pointer ${
+                      aiFlow === flow.id
+                        ? "bg-[#1F5CF7] text-white shadow-md shadow-blue-500/20"
+                        : "text-[#79716B] hover:text-[#1C1917]"
+                    }`}
                   >
-                    <span className="text-sm font-medium text-[#79716B]">
-                      Upload reference image
-                    </span>
+                    {flow.label}
                   </button>
-                ) : (
-                  <div className="inline-flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-[#F8F6F4]">
-                    <img
-                      src={aiRefImage}
-                      alt="Reference"
-                      className="h-16 object-contain rounded"
-                    />
-                    <button
-                      onClick={() => {
-                        setAiRefImage(null);
-                        if (aiFileInputRef.current) aiFileInputRef.current.value = "";
-                      }}
-                      className="text-sm text-[#79716B] hover:text-red-600 transition cursor-pointer"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                )}
-              </section>
+                ))}
+              </div>
 
+              {/* ---- EXAMPLES FLOW ---- */}
+              {aiFlow === "examples" && (
+                <>
+                  <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                    <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                      Step 2
+                    </label>
+                    <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                      Choose an example
+                    </label>
+                    <p className="text-sm text-[#79716B] mb-5">
+                      Pick a starting point. You can edit the prompt and swap the reference image after.
+                    </p>
+                    <AiInspirationGallery
+                      onSelect={handleExampleSelect}
+                      selectedId={aiSelectedPresetId}
+                    />
+                  </section>
+
+                  {/* Editable prompt + reference from the example */}
+                  {aiSelectedPresetId && (
+                    <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                      <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                        Step 3
+                      </label>
+                      <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                        Edit prompt &amp; reference
+                      </label>
+                      <p className="text-sm text-[#79716B] mb-4">
+                        Tweak the prompt or swap the reference image to make it yours.
+                      </p>
+
+                      {/* Prompt textarea */}
+                      <div className="relative mb-5">
+                        <textarea
+                          value={aiPrompt}
+                          onChange={(e) => setAiPrompt(e.target.value)}
+                          rows={4}
+                          className="w-full px-4 py-3 pr-12 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition resize-none bg-white"
+                        />
+                        <button
+                          onClick={handleImprovePrompt}
+                          disabled={!aiPrompt.trim() || aiImproving}
+                          title="Enhance prompt with AI"
+                          className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-[#EEF5FF] text-[#1F5CF7] hover:bg-[#1F5CF7] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                        >
+                          {aiImproving ? (
+                            <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+
+                      {/* Reference image (from example, editable) */}
+                      <input
+                        ref={aiFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAiRefUpload}
+                        className="hidden"
+                      />
+
+                      <div>
+                        <label className="block text-sm font-medium text-[#1C1917] mb-2">
+                          Reference image
+                        </label>
+                        {!aiRefImage ? (
+                          <button
+                            onClick={() => aiFileInputRef.current?.click()}
+                            className="border-2 border-dashed border-gray-300 rounded-xl px-6 py-4 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer"
+                          >
+                            <span className="text-sm font-medium text-[#79716B]">
+                              Upload reference image
+                            </span>
+                          </button>
+                        ) : (
+                          <div className="inline-flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-[#F8F6F4]">
+                            <img
+                              src={aiRefImage}
+                              alt="Reference"
+                              className="h-16 object-contain rounded"
+                            />
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => aiFileInputRef.current?.click()}
+                                className="text-sm text-[#1F5CF7] hover:underline transition cursor-pointer"
+                              >
+                                Replace
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setAiRefImage(null);
+                                  if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+                                }}
+                                className="text-sm text-[#79716B] hover:text-red-600 transition cursor-pointer"
+                              >
+                                Remove
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </section>
+                  )}
+                </>
+              )}
+
+              {/* ---- FROM SCRATCH FLOW ---- */}
+              {aiFlow === "scratch" && (
+                <>
+                  <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                    <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                      Step 2
+                    </label>
+                    <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                      Describe the style
+                    </label>
+                    <p className="text-sm text-[#79716B] mb-4">
+                      Describe the look you want — materials, colors, textures, vibe. Hit the sparkle button to enhance your prompt with AI.
+                    </p>
+
+                    <div className="relative">
+                      <textarea
+                        value={aiPrompt}
+                        onChange={(e) => setAiPrompt(e.target.value)}
+                        placeholder={`e.g. "neon sign on a brick wall" or "hand-painted watercolor with flowers"`}
+                        rows={4}
+                        className="w-full px-4 py-3 pr-12 text-sm border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition resize-none bg-white"
+                      />
+                      <button
+                        onClick={handleImprovePrompt}
+                        disabled={!aiPrompt.trim() || aiImproving}
+                        title="Enhance prompt with AI"
+                        className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-lg bg-[#EEF5FF] text-[#1F5CF7] hover:bg-[#1F5CF7] hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
+                      >
+                        {aiImproving ? (
+                          <span className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
+                  </section>
+
+                  <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                    <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                      Step 3
+                    </label>
+                    <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                      Reference image{" "}
+                      <span className="text-[#A8A29E] font-normal text-base">
+                        (optional)
+                      </span>
+                    </label>
+                    <p className="text-sm text-[#79716B] mb-4">
+                      Upload a style reference — a font you like, a logo, an example of
+                      the look you want.
+                    </p>
+
+                    <input
+                      ref={aiFileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAiRefUpload}
+                      className="hidden"
+                    />
+
+                    {!aiRefImage ? (
+                      <button
+                        onClick={() => aiFileInputRef.current?.click()}
+                        className="border-2 border-dashed border-gray-300 rounded-xl px-6 py-4 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer"
+                      >
+                        <span className="text-sm font-medium text-[#79716B]">
+                          Upload reference image
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="inline-flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-[#F8F6F4]">
+                        <img
+                          src={aiRefImage}
+                          alt="Reference"
+                          className="h-16 object-contain rounded"
+                        />
+                        <button
+                          onClick={() => {
+                            setAiRefImage(null);
+                            if (aiFileInputRef.current) aiFileInputRef.current.value = "";
+                          }}
+                          className="text-sm text-[#79716B] hover:text-red-600 transition cursor-pointer"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    )}
+                  </section>
+                </>
+              )}
+
+              {/* Generate button (shared) */}
               <section>
                 <button
                   onClick={handleAiGenerate}
@@ -717,6 +906,7 @@ export default function CreatePage() {
                 )}
               </section>
 
+              {/* Preview sections (shared) */}
               {aiImageUrl && !aiVideoUrl && (
                 <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
                   <label className="block text-lg font-bold text-[#1C1917] mb-4">
