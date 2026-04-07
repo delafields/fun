@@ -32,8 +32,8 @@ export default function StylePicker({ selected, onSelect }: StylePickerProps) {
           onClick={() => onSelect(preset)}
           className={`group relative p-4 rounded-xl border-2 text-left transition-all duration-200 cursor-pointer ${
             selected === preset.id
-              ? "border-black bg-gray-50 shadow-md"
-              : "border-gray-200 hover:border-gray-400 hover:shadow-sm"
+              ? "border-[#1F5CF7] bg-[#EEF5FF] shadow-md shadow-blue-500/10"
+              : "border-gray-200 hover:border-gray-300 hover:shadow-sm bg-white"
           }`}
         >
           <div
@@ -45,12 +45,12 @@ export default function StylePicker({ selected, onSelect }: StylePickerProps) {
           >
             Aa
           </div>
-          <div className="font-semibold text-sm text-gray-900">
+          <div className="font-semibold text-sm text-[#1C1917]">
             {preset.name}
           </div>
-          <div className="text-xs text-gray-500">{preset.description}</div>
+          <div className="text-xs text-[#79716B]">{preset.description}</div>
           {selected === preset.id && (
-            <div className="absolute top-2 right-2 w-5 h-5 bg-black rounded-full flex items-center justify-center">
+            <div className="absolute top-2 right-2 w-5 h-5 bg-[#1F5CF7] rounded-full flex items-center justify-center">
               <svg
                 className="w-3 h-3 text-white"
                 fill="none"

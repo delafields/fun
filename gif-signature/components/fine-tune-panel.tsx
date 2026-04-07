@@ -47,14 +47,14 @@ export default function FineTunePanel({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-[#1C1917] hover:bg-[#F8F6F4] transition cursor-pointer"
       >
         <span>Fine-tune options</span>
         <svg
-          className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-[#A8A29E] transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -72,7 +72,7 @@ export default function FineTunePanel({
         <div className="px-5 pb-5 space-y-5 border-t border-gray-100 pt-4">
           {/* Color */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Ink Color
             </label>
             <div className="flex items-center gap-3">
@@ -86,57 +86,57 @@ export default function FineTunePanel({
                 type="text"
                 value={color}
                 onChange={(e) => onColorChange(e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm w-28 font-mono"
+                className="px-3 py-2 border border-gray-200 rounded-xl text-sm w-28 font-mono focus:outline-none focus:border-[#1F5CF7]"
               />
             </div>
           </div>
 
           {/* Subtitle */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Title / Company{" "}
-              <span className="text-gray-400 font-normal">(optional)</span>
+              <span className="text-[#A8A29E] font-normal">(optional)</span>
             </label>
             <input
               type="text"
               value={subtitle}
               onChange={(e) => onSubtitleChange(e.target.value)}
               placeholder="e.g. CEO, Acme Corp"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1F5CF7]"
             />
           </div>
 
           {/* Speed */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Animation Speed
             </label>
             <div className="flex items-center gap-3">
-              <span className="text-xs text-gray-500">Fast</span>
+              <span className="text-xs text-[#A8A29E]">Fast</span>
               <input
                 type="range"
                 min={25}
                 max={80}
                 value={speed}
                 onChange={(e) => onSpeedChange(Number(e.target.value))}
-                className="flex-1 accent-black"
+                className="flex-1 accent-[#1F5CF7]"
               />
-              <span className="text-xs text-gray-500">Slow</span>
+              <span className="text-xs text-[#A8A29E]">Slow</span>
             </div>
           </div>
 
           {/* Background */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Background
             </label>
             <div className="flex gap-2">
               <button
                 onClick={() => onBgColorChange(null)}
-                className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
                   bgColor === null
-                    ? "border-black bg-gray-50"
-                    : "border-gray-200"
+                    ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]"
+                    : "border-gray-200 text-[#79716B]"
                 }`}
               >
                 <span className="inline-block w-4 h-4 rounded border border-gray-300 mr-2 align-middle bg-[repeating-conic-gradient(#d1d5db_0%_25%,transparent_0%_50%)] bg-[length:8px_8px]" />
@@ -144,10 +144,10 @@ export default function FineTunePanel({
               </button>
               <button
                 onClick={() => onBgColorChange("#ffffff")}
-                className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
+                className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
                   bgColor === "#ffffff"
-                    ? "border-black bg-gray-50"
-                    : "border-gray-200"
+                    ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]"
+                    : "border-gray-200 text-[#79716B]"
                 }`}
               >
                 <span className="inline-block w-4 h-4 rounded border border-gray-300 mr-2 align-middle bg-white" />
@@ -158,7 +158,7 @@ export default function FineTunePanel({
 
           {/* Size */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Size
             </label>
             <div className="flex gap-2">
@@ -166,10 +166,10 @@ export default function FineTunePanel({
                 <button
                   key={s}
                   onClick={() => onSizeChange(s)}
-                  className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
                     size === s
-                      ? "border-black bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400"
+                      ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]"
+                      : "border-gray-200 hover:border-gray-300 text-[#79716B]"
                   }`}
                 >
                   {SIZE_LABELS[s]}
@@ -180,7 +180,7 @@ export default function FineTunePanel({
 
           {/* Loop Mode */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-[#1C1917] mb-2">
               Animation Behavior
             </label>
             <div className="flex gap-2 flex-wrap">
@@ -188,14 +188,14 @@ export default function FineTunePanel({
                 <button
                   key={opt.id}
                   onClick={() => onLoopModeChange(opt.id)}
-                  className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
+                  className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
                     loopMode === opt.id
-                      ? "border-black bg-gray-50"
-                      : "border-gray-200 hover:border-gray-400"
+                      ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]"
+                      : "border-gray-200 hover:border-gray-300 text-[#79716B]"
                   }`}
                 >
                   <div className="font-medium">{opt.label}</div>
-                  <div className="text-xs text-gray-400">{opt.desc}</div>
+                  <div className="text-xs text-[#A8A29E]">{opt.desc}</div>
                 </button>
               ))}
             </div>

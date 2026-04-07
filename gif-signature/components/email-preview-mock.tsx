@@ -1,7 +1,7 @@
 "use client";
 
 interface EmailPreviewMockProps {
-  children: React.ReactNode; // The signature preview (canvas or image)
+  children: React.ReactNode;
   senderName?: string;
 }
 
@@ -10,29 +10,29 @@ export default function EmailPreviewMock({
   senderName = "You",
 }: EmailPreviewMockProps) {
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm max-w-lg">
+    <div className="border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm max-w-lg">
       {/* Email header */}
-      <div className="border-b border-gray-100 px-5 py-3 bg-gray-50/50">
+      <div className="border-b border-gray-100 px-5 py-3 bg-[#F8F6F4]">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center text-xs font-bold text-white">
+          <div className="w-8 h-8 rounded-full bg-[#1F5CF7] flex items-center justify-center text-xs font-bold text-white">
             {senderName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <div className="text-sm font-semibold text-gray-800">
+            <div className="text-sm font-semibold text-[#1C1917]">
               {senderName}
             </div>
-            <div className="text-xs text-gray-400">
+            <div className="text-xs text-[#A8A29E]">
               to: recipient@example.com
             </div>
           </div>
         </div>
-        <div className="text-sm font-medium text-gray-700">
+        <div className="text-sm font-medium text-[#1C1917]">
           Re: Quick follow up
         </div>
       </div>
 
       {/* Email body */}
-      <div className="px-5 py-4 text-sm text-gray-600 space-y-3">
+      <div className="px-5 py-4 text-sm text-[#79716B] space-y-3">
         <p>Hey,</p>
         <p>
           Thanks for the great meeting today! I&apos;ll send over the proposal
@@ -43,9 +43,9 @@ export default function EmailPreviewMock({
         {/* Signature */}
         <div className="pt-1 border-t border-gray-100 mt-3">
           <div className="py-2">{children}</div>
-          <div className="text-xs text-gray-400 mt-1">
+          <div className="text-xs text-[#A8A29E] mt-1">
             <div>{senderName}</div>
-            <div>Senior Designer · Acme Corp</div>
+            <div>Senior Designer &middot; Acme Corp</div>
           </div>
         </div>
       </div>

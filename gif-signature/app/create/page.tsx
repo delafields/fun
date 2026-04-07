@@ -51,8 +51,8 @@ export default function CreatePage() {
   const [aiName, setAiName] = useState("");
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiRefImage, setAiRefImage] = useState<string | null>(null);
-  const [aiImageUrl, setAiImageUrl] = useState<string | null>(null); // Step 1 result
-  const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null); // Step 2 result
+  const [aiImageUrl, setAiImageUrl] = useState<string | null>(null);
+  const [aiVideoUrl, setAiVideoUrl] = useState<string | null>(null);
   const [aiGenerating, setAiGenerating] = useState(false);
   const [aiAnimating, setAiAnimating] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -135,7 +135,6 @@ export default function CreatePage() {
     reader.readAsDataURL(file);
   }, []);
 
-  // Step 1: Generate static image preview
   const handleAiGenerate = async () => {
     if (!aiName.trim()) return;
     setAiGenerating(true);
@@ -166,7 +165,6 @@ export default function CreatePage() {
     }
   };
 
-  // Step 2: Animate the approved image (triggered by "Get My Signature")
   const handleAiAnimate = async () => {
     if (!aiImageUrl) return;
     setAiAnimating(true);
@@ -199,7 +197,6 @@ export default function CreatePage() {
     try {
       let checkoutConfig: Record<string, unknown>;
 
-      // Store headshot in localStorage if present (too large for Stripe metadata)
       if (extras.headshot) {
         localStorage.setItem("gif-sig-headshot", extras.headshot);
       }
@@ -207,17 +204,14 @@ export default function CreatePage() {
       if (mode === "type") {
         if (!name.trim()) return;
         checkoutConfig = { mode: "type", ...config };
-        // Strip headshot base64 from config (stored in localStorage)
         if (checkoutConfig.extras) {
           const { headshot, ...restExtras } = checkoutConfig.extras as SignatureExtras;
           checkoutConfig.extras = restExtras;
         }
       } else if (mode === "upload") {
         if (!uploadedImage) return;
-        // Store image in localStorage (too large for Stripe metadata)
         localStorage.setItem("gif-sig-upload-image", uploadedImage);
         checkoutConfig = { mode: "upload", ...uploadConfig };
-        // Strip headshot base64
         if (checkoutConfig.extras) {
           const { headshot, ...restExtras } = checkoutConfig.extras as SignatureExtras;
           checkoutConfig.extras = restExtras;
@@ -249,26 +243,50 @@ export default function CreatePage() {
     (mode === "ai" && aiVideoUrl && aiName.trim());
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#F8F6F4]">
       {/* Header */}
-      <header className="border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight">
-            GIF Signature
+      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-2">
+            <svg
+              className="w-7 h-7 text-[#1F5CF7]"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M15.042 21.672L13.684 16.6m0 0l-2.51 2.225.569-9.47 5.227 7.917-3.286-.672zm-7.518-.267A8.25 8.25 0 1120.25 10.5M8.288 14.212A5.25 5.25 0 1117.25 10.5"
+              />
+            </svg>
+            <span className="text-lg font-bold tracking-tight text-[#1C1917]">
+              GIF Signature
+            </span>
+          </Link>
+          <Link
+            href="/"
+            className="text-sm text-[#79716B] hover:text-[#1F5CF7] transition-colors"
+          >
+            &larr; Back
           </Link>
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-8 md:py-12">
-        <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-2">
-          Create your signature
-        </h1>
-        <p className="text-gray-500 mb-8">
-          Choose how you want to create your animated email signature.
-        </p>
+      <main className="max-w-5xl mx-auto px-6 py-10 md:py-14">
+        {/* Page heading */}
+        <div className="mb-10">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-[-0.03em] text-[#1C1917] mb-3">
+            Create your signature
+          </h1>
+          <p className="text-[#79716B] text-lg">
+            Choose how you want to create your animated email signature.
+          </p>
+        </div>
 
         {/* Mode Tabs */}
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-8 max-w-lg">
+        <div className="flex gap-1 bg-white rounded-2xl p-1.5 mb-10 max-w-lg shadow-sm border border-gray-100">
           {([
             { id: "type", label: "Type it", icon: "T" },
             { id: "upload", label: "Upload it", icon: "\u2191" },
@@ -277,10 +295,10 @@ export default function CreatePage() {
             <button
               key={tab.id}
               onClick={() => setMode(tab.id)}
-              className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition cursor-pointer ${
+              className={`flex-1 px-4 py-2.5 rounded-xl text-sm font-medium transition cursor-pointer ${
                 mode === tab.id
-                  ? "bg-white text-black shadow-sm"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "bg-[#1F5CF7] text-white shadow-md shadow-blue-500/20"
+                  : "text-[#79716B] hover:text-[#1C1917]"
               }`}
             >
               <span className="mr-1.5">{tab.icon}</span>
@@ -293,23 +311,29 @@ export default function CreatePage() {
           {/* ============ TYPE MODE ============ */}
           {mode === "type" && (
             <>
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  1. Your name
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 1
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-4">
+                  Your name
                 </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="John Smith"
-                  className="w-full max-w-md px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition"
+                  className="w-full max-w-md px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition bg-white"
                   autoFocus
                 />
               </section>
 
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
-                  2. Pick a style
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 2
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-4">
+                  Pick a style
                 </label>
                 <StylePicker
                   selected={preset.id}
@@ -318,22 +342,22 @@ export default function CreatePage() {
               </section>
 
               {name.trim() && (
-                <section>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-lg font-bold text-[#1C1917]">
                       Preview
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs ${!showEmailPreview ? "text-gray-700 font-medium" : "text-gray-400"}`}>Signature</span>
+                      <span className={`text-xs ${!showEmailPreview ? "text-[#1C1917] font-medium" : "text-[#A8A29E]"}`}>Signature</span>
                       <button
                         onClick={() => setShowEmailPreview(!showEmailPreview)}
-                        className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${showEmailPreview ? "bg-black" : "bg-gray-300"}`}
+                        className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${showEmailPreview ? "bg-[#1F5CF7]" : "bg-gray-300"}`}
                         role="switch"
                         aria-checked={showEmailPreview}
                       >
                         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showEmailPreview ? "translate-x-4" : ""}`} />
                       </button>
-                      <span className={`text-xs ${showEmailPreview ? "text-gray-700 font-medium" : "text-gray-400"}`}>In email</span>
+                      <span className={`text-xs ${showEmailPreview ? "text-[#1C1917] font-medium" : "text-[#A8A29E]"}`}>In email</span>
                     </div>
                   </div>
                   {showEmailPreview ? (
@@ -341,20 +365,24 @@ export default function CreatePage() {
                       <SignaturePreview config={config} />
                     </EmailPreviewMock>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-gray-50/50">
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-[#F8F6F4]">
                       <SignaturePreview config={config} />
                     </div>
                   )}
                 </section>
               )}
 
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
-                  3. Fine-tune{" "}
-                  <span className="text-gray-400 font-normal normal-case">
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 3
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-1">
+                  Fine-tune{" "}
+                  <span className="text-[#A8A29E] font-normal text-base">
                     (optional)
                   </span>
                 </label>
+                <p className="text-sm text-[#79716B] mb-4">Customize colors, speed, size, and add extras.</p>
                 <div className="space-y-3">
                   <FineTunePanel
                     color={color}
@@ -382,11 +410,14 @@ export default function CreatePage() {
           {/* ============ UPLOAD MODE ============ */}
           {mode === "upload" && (
             <>
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  1. Upload your signature
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 1
                 </label>
-                <p className="text-sm text-gray-500 mb-4">
+                <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                  Upload your signature
+                </label>
+                <p className="text-sm text-[#79716B] mb-5">
                   Upload a photo or scan of your handwritten signature. We&apos;ll
                   animate it with a writing effect.
                 </p>
@@ -402,19 +433,23 @@ export default function CreatePage() {
                 {!uploadedImage ? (
                   <button
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-gray-400 transition cursor-pointer"
+                    className="w-full max-w-md border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer"
                   >
-                    <div className="text-3xl mb-2 text-gray-400">{"\u2191"}</div>
-                    <div className="font-medium text-gray-700">
+                    <div className="w-12 h-12 bg-[#EEF5FF] text-[#1F5CF7] rounded-xl flex items-center justify-center mx-auto mb-3">
+                      <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                    </div>
+                    <div className="font-semibold text-[#1C1917]">
                       Click to upload
                     </div>
-                    <div className="text-sm text-gray-400 mt-1">
+                    <div className="text-sm text-[#A8A29E] mt-1">
                       PNG, JPG, or SVG
                     </div>
                   </button>
                 ) : (
                   <div className="max-w-md">
-                    <div className="border border-gray-200 rounded-xl p-4 flex items-center gap-4">
+                    <div className="border border-gray-200 rounded-xl p-4 flex items-center gap-4 bg-[#F8F6F4]">
                       <img
                         src={uploadedImage}
                         alt="Uploaded signature"
@@ -426,7 +461,7 @@ export default function CreatePage() {
                           setUploadImg(null);
                           if (fileInputRef.current) fileInputRef.current.value = "";
                         }}
-                        className="ml-auto text-sm text-gray-500 hover:text-red-600 transition cursor-pointer"
+                        className="ml-auto text-sm text-[#79716B] hover:text-red-600 transition cursor-pointer"
                       >
                         Remove
                       </button>
@@ -435,24 +470,23 @@ export default function CreatePage() {
                 )}
               </section>
 
-              {/* Preview */}
               {uploadImg && (
-                <section>
-                  <div className="flex items-center justify-between mb-3">
-                    <label className="block text-sm font-semibold text-gray-900 uppercase tracking-wide">
+                <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="block text-lg font-bold text-[#1C1917]">
                       Preview
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className={`text-xs ${!showEmailPreview ? "text-gray-700 font-medium" : "text-gray-400"}`}>Signature</span>
+                      <span className={`text-xs ${!showEmailPreview ? "text-[#1C1917] font-medium" : "text-[#A8A29E]"}`}>Signature</span>
                       <button
                         onClick={() => setShowEmailPreview(!showEmailPreview)}
-                        className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${showEmailPreview ? "bg-black" : "bg-gray-300"}`}
+                        className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${showEmailPreview ? "bg-[#1F5CF7]" : "bg-gray-300"}`}
                         role="switch"
                         aria-checked={showEmailPreview}
                       >
                         <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${showEmailPreview ? "translate-x-4" : ""}`} />
                       </button>
-                      <span className={`text-xs ${showEmailPreview ? "text-gray-700 font-medium" : "text-gray-400"}`}>In email</span>
+                      <span className={`text-xs ${showEmailPreview ? "text-[#1C1917] font-medium" : "text-[#A8A29E]"}`}>In email</span>
                     </div>
                   </div>
                   {showEmailPreview ? (
@@ -460,57 +494,60 @@ export default function CreatePage() {
                       <UploadPreview config={uploadConfig} img={uploadImg} />
                     </EmailPreviewMock>
                   ) : (
-                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-gray-50/50">
+                    <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-[#F8F6F4]">
                       <UploadPreview config={uploadConfig} img={uploadImg} />
                     </div>
                   )}
                 </section>
               )}
 
-              {/* Fine-tune for upload */}
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
-                  2. Fine-tune{" "}
-                  <span className="text-gray-400 font-normal normal-case">
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 2
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-1">
+                  Fine-tune{" "}
+                  <span className="text-[#A8A29E] font-normal text-base">
                     (optional)
                   </span>
                 </label>
+                <p className="text-sm text-[#79716B] mb-4">Adjust speed, background, size, and add extras.</p>
                 <div className="space-y-3">
                 <div className="border border-gray-200 rounded-xl p-5 space-y-5 max-w-md">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#1C1917] mb-2">
                       Animation Speed
                     </label>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-gray-500">Fast</span>
+                      <span className="text-xs text-[#A8A29E]">Fast</span>
                       <input
                         type="range"
                         min={25}
                         max={80}
                         value={uploadSpeed}
                         onChange={(e) => setUploadSpeed(Number(e.target.value))}
-                        className="flex-1 accent-black"
+                        className="flex-1 accent-[#1F5CF7]"
                       />
-                      <span className="text-xs text-gray-500">Slow</span>
+                      <span className="text-xs text-[#A8A29E]">Slow</span>
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#1C1917] mb-2">
                       Background
                     </label>
                     <div className="flex gap-2">
                       <button
                         onClick={() => setUploadBg(null)}
-                        className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
-                          uploadBg === null ? "border-black bg-gray-50" : "border-gray-200"
+                        className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
+                          uploadBg === null ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]" : "border-gray-200 text-[#79716B]"
                         }`}
                       >
                         Transparent
                       </button>
                       <button
                         onClick={() => setUploadBg("#ffffff")}
-                        className={`px-4 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
-                          uploadBg === "#ffffff" ? "border-black bg-gray-50" : "border-gray-200"
+                        className={`px-4 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
+                          uploadBg === "#ffffff" ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]" : "border-gray-200 text-[#79716B]"
                         }`}
                       >
                         White
@@ -518,7 +555,7 @@ export default function CreatePage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#1C1917] mb-2">
                       Size
                     </label>
                     <div className="flex gap-2">
@@ -526,8 +563,8 @@ export default function CreatePage() {
                         <button
                           key={s}
                           onClick={() => setUploadSize(s)}
-                          className={`px-3 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
-                            uploadSize === s ? "border-black bg-gray-50" : "border-gray-200"
+                          className={`px-3 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
+                            uploadSize === s ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]" : "border-gray-200 text-[#79716B]"
                           }`}
                         >
                           {s.charAt(0).toUpperCase() + s.slice(1)}
@@ -536,7 +573,7 @@ export default function CreatePage() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-[#1C1917] mb-2">
                       Animation Behavior
                     </label>
                     <div className="flex gap-2 flex-wrap">
@@ -548,8 +585,8 @@ export default function CreatePage() {
                         <button
                           key={opt.id}
                           onClick={() => setUploadLoopMode(opt.id)}
-                          className={`px-3 py-2 rounded-lg text-sm border-2 transition cursor-pointer ${
-                            uploadLoopMode === opt.id ? "border-black bg-gray-50" : "border-gray-200"
+                          className={`px-3 py-2 rounded-xl text-sm border-2 transition cursor-pointer ${
+                            uploadLoopMode === opt.id ? "border-[#1F5CF7] bg-[#EEF5FF] text-[#1F5CF7]" : "border-gray-200 text-[#79716B]"
                           }`}
                         >
                           {opt.label}
@@ -570,24 +607,30 @@ export default function CreatePage() {
           {/* ============ AI MODE ============ */}
           {mode === "ai" && (
             <>
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  1. Your name
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 1
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-4">
+                  Your name
                 </label>
                 <input
                   type="text"
                   value={aiName}
                   onChange={(e) => setAiName(e.target.value)}
                   placeholder="Jeremy"
-                  className="w-full max-w-md px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition"
+                  className="w-full max-w-md px-4 py-3 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition bg-white"
                 />
               </section>
 
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  2. Describe the style
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 2
                 </label>
-                <p className="text-sm text-gray-500 mb-4">
+                <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                  Describe the style
+                </label>
+                <p className="text-sm text-[#79716B] mb-4">
                   Be creative — describe the font, effects, colors, animations.
                   Your name will be automatically included.
                 </p>
@@ -596,18 +639,21 @@ export default function CreatePage() {
                   onChange={(e) => setAiPrompt(e.target.value)}
                   placeholder={`e.g. "Playful bubble font with a star that traces around the letters" or "Bold graffiti style with spray paint effect, letter by letter reveal"`}
                   rows={3}
-                  className="w-full max-w-lg px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-black transition resize-none"
+                  className="w-full max-w-lg px-4 py-3 text-base border-2 border-gray-200 rounded-xl focus:outline-none focus:border-[#1F5CF7] transition resize-none bg-white"
                 />
               </section>
 
-              <section>
-                <label className="block text-sm font-semibold text-gray-900 mb-2 uppercase tracking-wide">
-                  3. Reference image{" "}
-                  <span className="text-gray-400 font-normal normal-case">
+              <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                <label className="block text-xs font-semibold text-[#1F5CF7] mb-2 uppercase tracking-wider">
+                  Step 3
+                </label>
+                <label className="block text-lg font-bold text-[#1C1917] mb-2">
+                  Reference image{" "}
+                  <span className="text-[#A8A29E] font-normal text-base">
                     (optional)
                   </span>
                 </label>
-                <p className="text-sm text-gray-500 mb-4">
+                <p className="text-sm text-[#79716B] mb-4">
                   Upload a style reference — a font you like, a logo, an example of
                   the look you want.
                 </p>
@@ -623,14 +669,14 @@ export default function CreatePage() {
                 {!aiRefImage ? (
                   <button
                     onClick={() => aiFileInputRef.current?.click()}
-                    className="border-2 border-dashed border-gray-300 rounded-xl px-6 py-4 text-center hover:border-gray-400 transition cursor-pointer"
+                    className="border-2 border-dashed border-gray-300 rounded-xl px-6 py-4 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer"
                   >
-                    <span className="text-sm font-medium text-gray-700">
+                    <span className="text-sm font-medium text-[#79716B]">
                       Upload reference image
                     </span>
                   </button>
                 ) : (
-                  <div className="inline-flex items-center gap-3 border border-gray-200 rounded-xl p-3">
+                  <div className="inline-flex items-center gap-3 border border-gray-200 rounded-xl p-3 bg-[#F8F6F4]">
                     <img
                       src={aiRefImage}
                       alt="Reference"
@@ -641,7 +687,7 @@ export default function CreatePage() {
                         setAiRefImage(null);
                         if (aiFileInputRef.current) aiFileInputRef.current.value = "";
                       }}
-                      className="text-sm text-gray-500 hover:text-red-600 transition cursor-pointer"
+                      className="text-sm text-[#79716B] hover:text-red-600 transition cursor-pointer"
                     >
                       Remove
                     </button>
@@ -653,7 +699,7 @@ export default function CreatePage() {
                 <button
                   onClick={handleAiGenerate}
                   disabled={!aiName.trim() || aiGenerating}
-                  className="px-6 py-3 bg-gray-900 text-white font-semibold rounded-xl hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="px-6 py-3 bg-[#1F5CF7] text-white font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {aiGenerating ? (
                     <span className="flex items-center gap-2">
@@ -671,32 +717,30 @@ export default function CreatePage() {
                 )}
               </section>
 
-              {/* AI Image Preview (Step 1 result) */}
               {aiImageUrl && !aiVideoUrl && (
-                <section>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
+                <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                  <label className="block text-lg font-bold text-[#1C1917] mb-4">
                     Preview
                   </label>
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-gray-50/50">
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-[#F8F6F4]">
                     <img
                       src={aiImageUrl}
                       alt={`Signature preview for ${aiName}`}
                       className="max-w-full h-auto max-h-48 rounded"
                     />
                   </div>
-                  <p className="text-sm text-gray-500 mt-3">
+                  <p className="text-sm text-[#79716B] mt-3">
                     Happy with this? Click below to animate it. Not quite right? Adjust your prompt and regenerate.
                   </p>
                 </section>
               )}
 
-              {/* AI Video Preview (Step 2 result) */}
               {aiVideoUrl && (
-                <section>
-                  <label className="block text-sm font-semibold text-gray-900 mb-3 uppercase tracking-wide">
+                <section className="bg-white rounded-2xl border border-gray-100 p-6 md:p-8 shadow-sm">
+                  <label className="block text-lg font-bold text-[#1C1917] mb-4">
                     Animated Preview
                   </label>
-                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-gray-50/50">
+                  <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 flex items-center justify-center bg-[#F8F6F4]">
                     <video
                       src={aiVideoUrl}
                       autoPlay
@@ -706,7 +750,7 @@ export default function CreatePage() {
                       className="max-w-full h-auto max-h-48 rounded"
                     />
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-[#A8A29E] mt-2">
                     This will be converted to an optimized GIF after checkout.
                   </p>
                 </section>
@@ -721,7 +765,7 @@ export default function CreatePage() {
                 <button
                   onClick={handleAiAnimate}
                   disabled={aiAnimating}
-                  className="w-full sm:w-auto px-8 py-4 bg-black text-white text-lg font-semibold rounded-xl hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {aiAnimating ? (
                     <span className="flex items-center gap-2">
@@ -732,7 +776,7 @@ export default function CreatePage() {
                     "Get My Signature \u2014 $7"
                   )}
                 </button>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-[#A8A29E] mt-2">
                   This will animate your signature. One-time payment after animation.
                 </p>
               </>
@@ -741,11 +785,11 @@ export default function CreatePage() {
                 <button
                   onClick={handleCheckout}
                   disabled={!canCheckout || loading}
-                  className="w-full sm:w-auto px-8 py-4 bg-black text-white text-lg font-semibold rounded-xl hover:bg-gray-800 disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer"
+                  className="w-full sm:w-auto px-8 py-4 bg-[#1F5CF7] text-white text-lg font-semibold rounded-xl hover:bg-[#1a4fd4] disabled:bg-gray-300 disabled:cursor-not-allowed transition cursor-pointer shadow-lg shadow-blue-500/20"
                 >
                   {loading ? "Redirecting..." : "Get My Signature \u2014 $7"}
                 </button>
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-[#A8A29E] mt-2">
                   One-time payment. Download immediately after checkout.
                 </p>
               </>

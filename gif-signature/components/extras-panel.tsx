@@ -44,17 +44,17 @@ export default function ExtrasPanel({
   };
 
   return (
-    <div className="border border-gray-200 rounded-xl overflow-hidden">
+    <div className="border border-gray-200 rounded-xl overflow-hidden bg-white">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between px-5 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+        className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-medium text-[#1C1917] hover:bg-[#F8F6F4] transition cursor-pointer"
       >
         <span>
           Stand-out extras{" "}
-          <span className="text-gray-400 font-normal">(optional)</span>
+          <span className="text-[#A8A29E] font-normal">(optional)</span>
         </span>
         <svg
-          className={`w-4 h-4 transition-transform ${open ? "rotate-180" : ""}`}
+          className={`w-4 h-4 text-[#A8A29E] transition-transform ${open ? "rotate-180" : ""}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -72,10 +72,10 @@ export default function ExtrasPanel({
         <div className="px-5 pb-5 space-y-6 border-t border-gray-100 pt-4">
           {/* Headshot / Logo */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#1C1917] mb-1">
               Headshot / Logo
             </label>
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-[#A8A29E] mb-2">
               Add a photo or company logo next to your signature
             </p>
             <input
@@ -88,12 +88,12 @@ export default function ExtrasPanel({
             {!extras.headshot ? (
               <button
                 onClick={() => headshotInputRef.current?.click()}
-                className="border-2 border-dashed border-gray-300 rounded-lg px-4 py-3 text-center hover:border-gray-400 transition cursor-pointer text-sm text-gray-600 w-full"
+                className="border-2 border-dashed border-gray-300 rounded-xl px-4 py-3 text-center hover:border-[#1F5CF7] hover:bg-[#EEF5FF]/30 transition cursor-pointer text-sm text-[#79716B] w-full"
               >
                 Upload image
               </button>
             ) : (
-              <div className="flex items-center gap-3 border border-gray-200 rounded-lg p-2">
+              <div className="flex items-center gap-3 border border-gray-200 rounded-xl p-2 bg-[#F8F6F4]">
                 <img
                   src={extras.headshot}
                   alt="Headshot"
@@ -105,7 +105,7 @@ export default function ExtrasPanel({
                     if (headshotInputRef.current)
                       headshotInputRef.current.value = "";
                   }}
-                  className="ml-auto text-xs text-gray-500 hover:text-red-600 transition cursor-pointer"
+                  className="ml-auto text-xs text-[#79716B] hover:text-red-600 transition cursor-pointer"
                 >
                   Remove
                 </button>
@@ -115,10 +115,10 @@ export default function ExtrasPanel({
 
           {/* Social Links */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#1C1917] mb-1">
               Social Links
             </label>
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-[#A8A29E] mb-2">
               Add icon badges for your profiles
             </p>
             <div className="space-y-2">
@@ -158,17 +158,17 @@ export default function ExtrasPanel({
                     {social.key === "linkedin"
                       ? "in"
                       : social.key === "twitter"
-                        ? "𝕏"
+                        ? "\ud835\udd4f"
                         : social.key === "github"
                           ? "GH"
-                          : "⊕"}
+                          : "\u2295"}
                   </span>
                   <input
                     type="text"
                     value={extras.socials?.[social.key] || ""}
                     onChange={(e) => updateSocial(social.key, e.target.value)}
                     placeholder={social.placeholder}
-                    className="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+                    className="flex-1 px-3 py-1.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1F5CF7]"
                   />
                 </div>
               ))}
@@ -177,10 +177,10 @@ export default function ExtrasPanel({
 
           {/* CTA Banner */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#1C1917] mb-1">
               Call to Action
             </label>
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-[#A8A29E] mb-2">
               Add a button-style banner below your signature
             </p>
             <div className="space-y-2">
@@ -189,24 +189,24 @@ export default function ExtrasPanel({
                 value={extras.cta?.text || ""}
                 onChange={(e) => updateCta("text", e.target.value)}
                 placeholder='e.g. "Book a call" or "View my portfolio"'
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1F5CF7]"
               />
               <input
                 type="text"
                 value={extras.cta?.url || ""}
                 onChange={(e) => updateCta("url", e.target.value)}
                 placeholder="https://calendly.com/you"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 font-mono text-xs"
+                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1F5CF7] font-mono text-xs"
               />
             </div>
           </div>
 
           {/* QR Code */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-[#1C1917] mb-1">
               QR Code
             </label>
-            <p className="text-xs text-gray-400 mb-2">
+            <p className="text-xs text-[#A8A29E] mb-2">
               Scannable link to your Calendly, LinkedIn, portfolio, etc.
             </p>
             <input
@@ -214,7 +214,7 @@ export default function ExtrasPanel({
               value={extras.qrUrl || ""}
               onChange={(e) => update({ qrUrl: e.target.value || undefined })}
               placeholder="https://calendly.com/you"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black/10 font-mono text-xs"
+              className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-[#1F5CF7] font-mono text-xs"
             />
           </div>
         </div>
